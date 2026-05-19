@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CardioGuard — Heart Disease Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  :root {
+    --red-50: #FCEBEB; --red-100: #F7C1C1; --red-200: #F09595;
+    --red-400: #E24B4A; --red-600: #A32D2D; --red-800: #791F1F; --red-900: #501313;
+    --teal-50: #E1F5EE; --teal-100: #9FE1CB; --teal-400: #1D9E75;
+    --teal-600: #0F6E56; --teal-800: #085041;
+    --gray-50: #F1EFE8; --gray-100: #D3D1C7; --gray-200: #B4B2A9;
+    --gray-400: #888780; --gray-600: #5F5E5A; --gray-800: #444441; --gray-900: #2C2C2A;
+    --amber-50: #FAEEDA; --amber-400: #BA7517; --amber-600: #854F0B;
+    --bg: #FAF9F7; --surface: #FFFFFF; --surface2: #F4F2EE;
+    --text: #1A1917; --muted: #6B6966; --border: rgba(0,0,0,0.10);
+    --radius: 14px; --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--red-900);
+    padding: 0 2.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: var(--red-400);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.35rem;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .logo-tag {
+    font-size: 11px; color: var(--red-200);
+    font-weight: 300; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .header-models {
+    display: flex; gap: 8px;
+  }
+  .model-badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; font-size: 11px; font-weight: 500;
+    padding: 4px 10px; border-radius: 20px;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 1160px; margin: 0 auto;
+    padding: 2.5rem 2rem;
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  /* ── Card Base ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-header-icon {
+    width: 32px; height: 32px;
+    background: var(--red-50);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--red-600);
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.05rem; color: var(--text);
+  }
+  .card-body { padding: 1.25rem 1.5rem; }
+
+  /* ── Form ── */
+  .section-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin: 1.2rem 0 0.75rem;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  .field-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .field-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field-grid.cols-1 { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 12px; color: var(--muted); font-weight: 500;
+  }
+  .field input, .field select {
+    height: 38px; padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--red-400);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(226,75,74,0.1);
+  }
+  .field .hint {
+    font-size: 11px; color: var(--gray-400);
+  }
+
+  /* Slider field */
+  .slider-field { display: flex; flex-direction: column; gap: 6px; }
+  .slider-field label {
+    font-size: 12px; color: var(--muted); font-weight: 500;
+    display: flex; justify-content: space-between;
+  }
+  .slider-val {
+    font-weight: 600; color: var(--text);
+    background: var(--surface2);
+    padding: 1px 8px; border-radius: 4px;
+    font-size: 13px;
+  }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    background: var(--gray-100); border-radius: 2px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--red-400);
+    cursor: pointer; border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  /* Toggle group */
+  .toggle-group {
+    display: flex; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden;
+  }
+  .toggle-group input[type=radio] { display: none; }
+  .toggle-group label {
+    flex: 1; text-align: center;
+    padding: 8px 6px; font-size: 12px; font-weight: 500;
+    color: var(--muted); cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border-right: 1px solid var(--border);
+  }
+  .toggle-group label:last-of-type { border-right: none; }
+  .toggle-group input:checked + label {
+    background: var(--red-50);
+    color: var(--red-800);
+  }
+
+  /* ── Submit Button ── */
+  .btn-predict {
+    width: 100%; height: 48px; margin-top: 1.25rem;
+    background: var(--red-600);
+    color: #fff; border: none; border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    letter-spacing: 0.01em;
+  }
+  .btn-predict:hover { background: var(--red-800); }
+  .btn-predict:active { transform: scale(0.99); }
+  .btn-predict.loading { opacity: 0.7; pointer-events: none; }
+
+  /* ── Results Panel ── */
+  #results-panel { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  /* Hero result */
+  .result-hero {
+    border-radius: var(--radius);
+    padding: 1.75rem 2rem;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 1.75rem;
+    transition: all 0.4s ease;
+  }
+  .result-hero.high-risk {
+    background: var(--red-50);
+    border-color: var(--red-200);
+  }
+  .result-hero.low-risk {
+    background: var(--teal-50);
+    border-color: var(--teal-100);
+  }
+  .result-hero.empty {
+    background: var(--surface); border: 1.5px dashed var(--gray-100);
+    justify-content: center;
+  }
+
+  .gauge-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+  .gauge-wrap svg { width: 110px; height: 110px; }
+  .gauge-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .gauge-pct {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem; line-height: 1;
+  }
+  .gauge-pct.high { color: var(--red-600); }
+  .gauge-pct.low  { color: var(--teal-600); }
+  .gauge-label { font-size: 10px; color: var(--muted); }
+
+  .result-info { flex: 1; }
+  .result-verdict {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem; margin-bottom: 6px;
+  }
+  .result-verdict.high { color: var(--red-800); }
+  .result-verdict.low  { color: var(--teal-800); }
+  .result-desc { font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+  .result-reco {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12.5px; font-weight: 500;
+  }
+  .result-reco.high { background: var(--red-100); color: var(--red-800); }
+  .result-reco.low  { background: var(--teal-100); color: var(--teal-800); }
+
+  .empty-state { text-align: center; padding: 2.5rem 1rem; }
+  .empty-icon { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.25; }
+  .empty-text { color: var(--muted); font-size: 14px; }
+
+  /* ── Model Cards ── */
+  .models-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .model-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.1rem;
+    position: relative; overflow: hidden;
+    transition: transform 0.15s;
+  }
+  .model-card:hover { transform: translateY(-1px); }
+  .model-card-accent {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .accent-lr   { background: #378ADD; }
+  .accent-svm  { background: #BA7517; }
+  .accent-rf   { background: #3B6D11; }
+  .accent-xgb  { background: #A32D2D; }
+
+  .model-name { font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .model-prob {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem; line-height: 1;
+  }
+  .model-prob.high { color: var(--red-600); }
+  .model-prob.low  { color: var(--teal-600); }
+  .model-status {
+    margin-top: 6px; font-size: 11.5px; font-weight: 500;
+    padding: 3px 8px; border-radius: 12px; display: inline-block;
+  }
+  .model-status.high { background: var(--red-50); color: var(--red-700, var(--red-600)); }
+  .model-status.low  { background: var(--teal-50); color: var(--teal-600); }
+
+  .model-bar-wrap {
+    margin-top: 10px; height: 4px;
+    background: var(--gray-100); border-radius: 2px; overflow: hidden;
+  }
+  .model-bar {
+    height: 100%; border-radius: 2px;
+    transition: width 0.7s cubic-bezier(.22,1,.36,1);
+  }
+  .model-bar.high { background: var(--red-400); }
+  .model-bar.low  { background: var(--teal-400); }
+
+  /* ── Consensus ── */
+  .consensus-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .consensus-votes {
+    display: flex; gap: 6px;
+  }
+  .vote-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--gray-100); border: 2px solid var(--border);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .vote-dot.yes  { background: var(--red-400); border-color: var(--red-200); }
+  .vote-dot.no   { background: var(--teal-400); border-color: var(--teal-100); }
+  .consensus-text { flex: 1; }
+  .consensus-title { font-weight: 600; font-size: 14px; }
+  .consensus-sub   { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .consensus-avg {
+    text-align: right;
+  }
+  .consensus-avg-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem; line-height: 1;
+  }
+  .consensus-avg-label { font-size: 11px; color: var(--muted); }
+
+  /* ── Vitals Summary ── */
+  .vitals-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .vital-item {
+    background: var(--surface2); border-radius: var(--radius-sm);
+    padding: 10px 14px;
+  }
+  .vital-name  { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .vital-value { font-size: 15px; font-weight: 600; color: var(--text); }
+
+  /* ── Spinner ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  /* ── Skeleton ── */
+  @keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--gray-50) 25%, var(--gray-100) 50%, var(--gray-50) 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.2s infinite;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; }
+    .field-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🫀</div>
+    <div>
+      <div class="logo-text">CardioGuard</div>
+      <div class="logo-tag">Heart Disease Risk Assessment</div>
+    </div>
+  </div>
+  <div class="header-models">
+    <span class="model-badge">Logistic Regression</span>
+    <span class="model-badge">SVM</span>
+    <span class="model-badge">Random Forest</span>
+    <span class="model-badge">XGBoost</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── Left: Input Form ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">📋</div>
+      <div>
+        <div class="card-title">Patient Information</div>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="section-label">Demographics</div>
+      <div class="field-grid">
+        <div class="slider-field">
+          <label>Age <span class="slider-val" id="age-val">54</span></label>
+          <input type="range" id="age" min="20" max="80" value="54"
+                 oninput="document.getElementById('age-val').textContent=this.value">
+        </div>
+        <div class="field">
+          <label>Sex</label>
+          <div class="toggle-group">
+            <input type="radio" name="sex" id="sex-m" value="1" checked>
+            <label for="sex-m">Male</label>
+            <input type="radio" name="sex" id="sex-f" value="0">
+            <label for="sex-f">Female</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Vital Signs</div>
+      <div class="field-grid cols-3">
+        <div class="slider-field">
+          <label>Blood Pressure <span class="slider-val" id="bp-val">130</span></label>
+          <input type="range" id="trestbps" min="90" max="200" value="130"
+                 oninput="document.getElementById('bp-val').textContent=this.value">
+          <span class="hint">mmHg</span>
+        </div>
+        <div class="slider-field">
+          <label>Cholesterol <span class="slider-val" id="chol-val">246</span></label>
+          <input type="range" id="chol" min="100" max="600" value="246"
+                 oninput="document.getElementById('chol-val').textContent=this.value">
+          <span class="hint">mg/dl</span>
+        </div>
+        <div class="slider-field">
+          <label>Max Heart Rate <span class="slider-val" id="hr-val">150</span></label>
+          <input type="range" id="thalach" min="70" max="210" value="150"
+                 oninput="document.getElementById('hr-val').textContent=this.value">
+          <span class="hint">bpm</span>
+        </div>
+      </div>
+
+      <div class="section-label">ECG & Stress Test</div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Chest Pain Type</label>
+          <select id="cp">
+            <option value="0">Typical Angina</option>
+            <option value="1">Atypical Angina</option>
+            <option value="2">Non-anginal Pain</option>
+            <option value="3">Asymptomatic</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Resting ECG</label>
+          <select id="restecg">
+            <option value="0">Normal</option>
+            <option value="1">ST-T Abnormality</option>
+            <option value="2">LV Hypertrophy</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Exercise Induced Angina</label>
+          <div class="toggle-group">
+            <input type="radio" name="exang" id="ex-no" value="0" checked>
+            <label for="ex-no">No</label>
+            <input type="radio" name="exang" id="ex-yes" value="1">
+            <label for="ex-yes">Yes</label>
+          </div>
+        </div>
+        <div class="slider-field">
+          <label>ST Depression <span class="slider-val" id="op-val">1.0</span></label>
+          <input type="range" id="oldpeak" min="0" max="6" value="1" step="0.1"
+                 oninput="document.getElementById('op-val').textContent=parseFloat(this.value).toFixed(1)">
+        </div>
+        <div class="field">
+          <label>ST Slope</label>
+          <select id="slope">
+            <option value="0">Upsloping</option>
+            <option value="1">Flat</option>
+            <option value="2">Downsloping</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Major Vessels (0–3)</label>
+          <select id="ca">
+            <option value="0">0 vessels</option>
+            <option value="1">1 vessel</option>
+            <option value="2">2 vessels</option>
+            <option value="3">3 vessels</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-label">Lab Results</div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Fasting Blood Sugar</label>
+          <div class="toggle-group">
+            <input type="radio" name="fbs" id="fbs-no" value="0" checked>
+            <label for="fbs-no">≤120 mg/dl</label>
+            <input type="radio" name="fbs" id="fbs-yes" value="1">
+            <label for="fbs-yes">&gt;120 mg/dl</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Thalassemia</label>
+          <select id="thal">
+            <option value="0">Normal</option>
+            <option value="1">Fixed Defect</option>
+            <option value="2">Reversible Defect</option>
+            <option value="3">Unknown</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-predict" id="predict-btn" onclick="predict()">
+        <span id="btn-text">Assess Heart Disease Risk</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ── Right: Results ── -->
+  <div id="results-panel">
+
+    <!-- Hero -->
+    <div class="result-hero empty" id="hero-card">
+      <div class="empty-state">
+        <div class="empty-icon">🫀</div>
+        <div class="empty-text">Fill in patient data and click<br><strong>Assess Heart Disease Risk</strong></div>
+      </div>
+    </div>
+
+    <!-- Model Cards -->
+    <div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">
+        Model Predictions
+      </div>
+      <div class="models-grid" id="models-grid">
+        <div class="model-card"><div class="model-card-accent accent-lr"></div>
+          <div class="model-name">Logistic Regression</div>
+          <div class="model-prob" id="lr-prob" style="color:var(--gray-200)">—</div>
+          <div class="model-bar-wrap"><div class="model-bar" id="lr-bar" style="width:0%"></div></div>
+        </div>
+        <div class="model-card"><div class="model-card-accent accent-svm"></div>
+          <div class="model-name">SVM</div>
+          <div class="model-prob" id="svm-prob" style="color:var(--gray-200)">—</div>
+          <div class="model-bar-wrap"><div class="model-bar" id="svm-bar" style="width:0%"></div></div>
+        </div>
+        <div class="model-card"><div class="model-card-accent accent-rf"></div>
+          <div class="model-name">Random Forest</div>
+          <div class="model-prob" id="rf-prob" style="color:var(--gray-200)">—</div>
+          <div class="model-bar-wrap"><div class="model-bar" id="rf-bar" style="width:0%"></div></div>
+        </div>
+        <div class="model-card"><div class="model-card-accent accent-xgb"></div>
+          <div class="model-name">XGBoost</div>
+          <div class="model-prob" id="xgb-prob" style="color:var(--gray-200)">—</div>
+          <div class="model-bar-wrap"><div class="model-bar" id="xgb-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Consensus -->
+    <div class="consensus-card" id="consensus-card">
+      <div class="consensus-votes" id="vote-dots">
+        <div class="vote-dot"></div>
+        <div class="vote-dot"></div>
+        <div class="vote-dot"></div>
+        <div class="vote-dot"></div>
+      </div>
+      <div class="consensus-text">
+        <div class="consensus-title" id="consensus-title">Awaiting assessment</div>
+        <div class="consensus-sub" id="consensus-sub">Submit patient data to see model consensus</div>
+      </div>
+      <div class="consensus-avg">
+        <div class="consensus-avg-num" id="avg-prob" style="color:var(--gray-200)">—</div>
+        <div class="consensus-avg-label">avg risk</div>
+      </div>
+    </div>
+
+    <!-- Vitals Summary -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">📊</div>
+        <div class="card-title">Patient Vitals Summary</div>
+      </div>
+      <div class="card-body">
+        <div class="vitals-grid" id="vitals-grid">
+          <div class="vital-item"><div class="vital-name">Age</div><div class="vital-value" id="v-age">—</div></div>
+          <div class="vital-item"><div class="vital-name">Blood Pressure</div><div class="vital-value" id="v-bp">—</div></div>
+          <div class="vital-item"><div class="vital-name">Cholesterol</div><div class="vital-value" id="v-chol">—</div></div>
+          <div class="vital-item"><div class="vital-name">Max Heart Rate</div><div class="vital-value" id="v-hr">—</div></div>
+          <div class="vital-item"><div class="vital-name">ST Depression</div><div class="vital-value" id="v-op">—</div></div>
+          <div class="vital-item"><div class="vital-name">Major Vessels</div><div class="vital-value" id="v-ca">—</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = '';  // Empty = same origin. For Colab, replace with your ngrok URL
+
+function getVal(id) { return document.getElementById(id).value; }
+function getRadio(name) {
+  return document.querySelector(`input[name=${name}]:checked`)?.value ?? '0';
+}
+
+function buildGaugeSVG(pct, isHigh) {
+  const r = 42, cx = 55, cy = 55;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  const color = isHigh ? '#A32D2D' : '#0F6E56';
+  const trackColor = isHigh ? '#F7C1C1' : '#9FE1CB';
+  return `<svg viewBox="0 0 110 110" fill="none">
+    <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${trackColor}" stroke-width="9"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${color}" stroke-width="9"
+      stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
+      stroke-dashoffset="${(circ * 0.25).toFixed(1)}"
+      stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/>
+  </svg>`;
+}
+
+function updateModelCard(key, prob, isHigh) {
+  const probEl = document.getElementById(`${key}-prob`);
+  const barEl  = document.getElementById(`${key}-bar`);
+  const cls    = isHigh ? 'high' : 'low';
+  probEl.textContent = prob.toFixed(1) + '%';
+  probEl.className = `model-prob ${cls}`;
+  barEl.style.width = prob + '%';
+  barEl.className = `model-bar ${cls}`;
+
+  const card = probEl.closest('.model-card');
+  let badge = card.querySelector('.model-status');
+  if (!badge) {
+    badge = document.createElement('div');
+    card.appendChild(badge);
+  }
+  badge.className = `model-status ${cls}`;
+  badge.textContent = isHigh ? '🚨 High Risk' : '✅ Low Risk';
+}
+
+async function predict() {
+  const btn  = document.getElementById('predict-btn');
+  const text = document.getElementById('btn-text');
+  btn.classList.add('loading');
+  text.innerHTML = '<div class="spinner"></div> Analyzing...';
+
+  const payload = {
+    age:      parseFloat(getVal('age')),
+    sex:      parseInt(getRadio('sex')),
+    cp:       parseInt(getVal('cp')),
+    trestbps: parseFloat(getVal('trestbps')),
+    chol:     parseFloat(getVal('chol')),
+    fbs:      parseInt(getRadio('fbs')),
+    restecg:  parseInt(getVal('restecg')),
+    thalach:  parseFloat(getVal('thalach')),
+    exang:    parseInt(getRadio('exang')),
+    oldpeak:  parseFloat(getVal('oldpeak')),
+    slope:    parseInt(getVal('slope')),
+    ca:       parseInt(getVal('ca')),
+    thal:     parseInt(getVal('thal'))
+  };
+
+  try {
+    const res  = await fetch(`${API}/predict`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    renderResults(data, payload);
+  } catch(e) {
+    alert('Could not connect to FastAPI backend.\nMake sure main.py is running.\n\nError: ' + e.message);
+  }
+
+  btn.classList.remove('loading');
+  text.textContent = 'Assess Heart Disease Risk';
+}
+
+function renderResults(data, payload) {
+  const { models, consensus } = data;
+  const isHigh = consensus.high_risk;
+  const avg    = consensus.avg_probability;
+
+  // Hero card
+  const hero = document.getElementById('hero-card');
+  hero.className = `result-hero ${isHigh ? 'high-risk' : 'low-risk'}`;
+  hero.innerHTML = `
+    <div class="gauge-wrap">
+      ${buildGaugeSVG(avg, isHigh)}
+      <div class="gauge-center">
+        <span class="gauge-pct ${isHigh ? 'high' : 'low'}">${avg.toFixed(0)}%</span>
+        <span class="gauge-label">risk score</span>
+      </div>
+    </div>
+    <div class="result-info">
+      <div class="result-verdict ${isHigh ? 'high' : 'low'}">
+        ${isHigh ? '🚨 High Risk Detected' : '✅ Low Risk'}
+      </div>
+      <div class="result-desc">
+        ${isHigh
+          ? 'Patient indicators are consistent with heart disease. Immediate cardiology consultation is recommended.'
+          : 'Patient indicators are within normal ranges. Continue routine cardiovascular monitoring.'}
+      </div>
+      <div class="result-reco ${isHigh ? 'high' : 'low'}">
+        ${isHigh
+          ? '⚠️ Recommendation: Refer to cardiologist, ECG follow-up and lifestyle intervention.'
+          : '✔ Recommendation: Annual checkup, maintain healthy lifestyle and diet.'}
+      </div>
+    </div>`;
+
+  // Model cards
+  const keyMap = {
+    'Logistic Regression': 'lr',
+    'SVM': 'svm',
+    'Random Forest': 'rf',
+    'XGBoost': 'xgb'
+  };
+  for (const [name, result] of Object.entries(models)) {
+    updateModelCard(keyMap[name], result.probability, result.prediction === 1);
+  }
+
+  // Consensus
+  const votes = consensus.votes;
+  const dots  = document.querySelectorAll('.vote-dot');
+  dots.forEach((d, i) => {
+    d.className = 'vote-dot ' + (i < votes ? 'yes' : 'no');
+  });
+  document.getElementById('consensus-title').textContent =
+    `${votes}/4 models predict High Risk`;
+  document.getElementById('consensus-sub').textContent =
+    votes >= 3 ? 'Strong consensus — high risk signal across models'
+    : votes === 2 ? 'Mixed signal — borderline case, further evaluation advised'
+    : 'Consensus favors low risk across models';
+  const avgEl = document.getElementById('avg-prob');
+  avgEl.textContent = avg.toFixed(1) + '%';
+  avgEl.style.color = isHigh ? 'var(--red-600)' : 'var(--teal-600)';
+
+  // Vitals
+  document.getElementById('v-age').textContent  = payload.age + ' yrs';
+  document.getElementById('v-bp').textContent   = payload.trestbps + ' mmHg';
+  document.getElementById('v-chol').textContent = payload.chol + ' mg/dl';
+  document.getElementById('v-hr').textContent   = payload.thalach + ' bpm';
+  document.getElementById('v-op').textContent   = payload.oldpeak.toFixed(1);
+  document.getElementById('v-ca').textContent   = payload.ca + ' vessel(s)';
+}
+</script>
+</body>
+</html>
